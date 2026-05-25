@@ -16,21 +16,34 @@ import java.util.List;
 @Slf4j
 public class ReactiveProgrammingExampleController {
 
-    // 1~9까지 출력하는 api
-    @GetMapping("/onenine/list")
-    public List<Integer> produceOneToNine() {
-        ArrayList<Integer> sink = new ArrayList<>();
-
-        for (int i = 0; i <= 9; i++) {
-            try {
-                Thread.sleep(500);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+    @GetMapping("/onenine/callable")
+    public Mono<List<Integer>> produceOneToNine() {
+        return Mono.fromCallable(() -> {
+            List<Integer> sink = new ArrayList<>();
+            for (int i = 1; i <= 9; i++) {
+                try {
+                    Thread.sleep(500);
+                } catch (Exception ignore) {
+                }
+                sink.add(i);
             }
-            sink.add(i);
-        }
+            return sink;
+        }).subscribeOn(Schedulers.boundedElastic());
+    }
 
-        return sink;
+    @GetMapping("/onenine/defer")
+    public Mono<List<Integer>> produceOneToNineDefer() {
+        return Mono.defer(() -> {
+            List<Integer> sink = new ArrayList<>();
+            for (int i = 1; i <= 9; i++) {
+                try {
+                    Thread.sleep(500);
+                } catch (Exception ignore) {
+                }
+                sink.add(i);
+            }
+            return Mono.just(sink);
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     // 1~9까지 출력하는 api with flux
